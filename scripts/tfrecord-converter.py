@@ -15,7 +15,7 @@ from itertools import islice, chain
 from argparse import ArgumentParser
 
 # disable logging and gpu
-#tf.logging.set_verbosity(tf.logging.ERROR)
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 POSE_DIM, IMG_DIM, SEQ_DIM = 5, 64, 15
@@ -59,12 +59,16 @@ def convert(record, batch_size):
     """
     path, filename = os.path.split(record)
     basename, *_ = os.path.splitext(filename)
-    print(basename)
+    print(basename, flush=True)
+
+    outpath = os.path.join('/scratch/dbachm2m/data/', 'shepard_metzler_5_parts/')
+    print(outpath)
+    print(os.access(outpath, os.W_OK))
 
     batch_process = lambda r: chunk(process(r), batch_size)
 
     for i, batch in enumerate(batch_process(record)):
-        p = os.path.join(path, "{0:}-{1:02}.pt.gz".format(basename, i))
+        p = os.path.join(outpath, "{0:}-{1:02}.pt.gz".format(basename, i))
         with gzip.open(p, 'wb') as f:
             torch.save(list(batch), f)
 
