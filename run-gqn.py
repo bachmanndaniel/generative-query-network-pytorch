@@ -5,6 +5,7 @@ Script to train the a GQN on the Shepard-Metzler dataset
 in accordance to the hyperparameter settings described in
 the supplementary materials of the paper.
 """
+import os
 import random
 import math
 from argparse import ArgumentParser
@@ -30,7 +31,19 @@ from shepardmetzler import ShepardMetzler
 #from placeholder import PlaceholderData as ShepardMetzler
 
 cuda = torch.cuda.is_available()
-device = torch.device("cuda:0" if cuda else "cpu")
+print("Cuda devices: ", torch.cuda.device_count())
+
+# device = torch.device("cuda:0" if cuda else "cpu")
+device = torch.device("cuda")
+
+devices = os.environ['CUDA_VISIBLE_DEVICES']
+device_ids = [int(i) for i in devices.split(",")] if cuda else None
+print("CUDA_VISIBLE_DEVICES: " + devices)
+
+debug = os.environ['DEBUG_RUN']
+if debug == "1":
+    import pdb
+    pdb.set_trace()
 
 # Random seeding
 random.seed(99)
@@ -51,8 +64,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Create model and optimizer
-    model = GenerativeQueryNetwork(x_dim=3, v_dim=7, r_dim=256, h_dim=128, z_dim=64, L=8).to(device)
-    model = nn.DataParallel(model) if args.data_parallel else model
+    model = GenerativeQueryNetwork(x_dim=3, v_dim=7, r_dim=256, h_dim=128, z_dim=64, L=8)
+    if count(device_ids) > 1 and args.data_parallel:
+        print("Use DataParallel")
+        model = nn.DataParallel(model)
+    model.to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=5 * 10 ** (-5))
 

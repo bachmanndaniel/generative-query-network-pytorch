@@ -3,4 +3,7 @@ logs
 .vs
 __pycache__
 
+scripts/tmp*
+
+checkpoint_model_exception_*.pt
 *.pth
