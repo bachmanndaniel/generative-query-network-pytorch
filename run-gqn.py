@@ -30,20 +30,20 @@ from gqn import GenerativeQueryNetwork, partition, Annealer
 from shepardmetzler import ShepardMetzler
 #from placeholder import PlaceholderData as ShepardMetzler
 
-cuda = torch.cuda.is_available()
-print("Cuda devices: ", torch.cuda.device_count())
-
-# device = torch.device("cuda:0" if cuda else "cpu")
-device = torch.device("cuda")
-
-devices = os.environ['CUDA_VISIBLE_DEVICES']
-device_ids = [int(i) for i in devices.split(",")] if cuda else None
-print("CUDA_VISIBLE_DEVICES: " + devices)
-
 debug = os.environ['DEBUG_RUN']
 if debug == "1":
     import pdb
     pdb.set_trace()
+    print("Starting with pdb trace set.")
+
+cuda = torch.cuda.is_available()
+device = torch.device("cuda")
+devices = os.environ['CUDA_VISIBLE_DEVICES']
+device_ids = [int(i) for i in devices.split(",")] if cuda else None
+
+print("$[CUDA_VISIBLE_DEVICES]: ", devices, "\n")
+print("Cuda devices: ", torch.cuda.device_count(), "\n")
+print("cuDNN Version: ", torch.backends.cudnn.version(), "\n")
 
 # Random seeding
 random.seed(99)
@@ -65,7 +65,7 @@ if __name__ == '__main__':
 
     # Create model and optimizer
     model = GenerativeQueryNetwork(x_dim=3, v_dim=7, r_dim=256, h_dim=128, z_dim=64, L=8)
-    if count(device_ids) > 1 and args.data_parallel:
+    if len(device_ids) > 1 and args.data_parallel:
         print("Use DataParallel")
         model = nn.DataParallel(model)
     model.to(device)
